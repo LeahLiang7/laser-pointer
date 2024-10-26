@@ -1,0 +1,43 @@
+import cv2
+import numpy as np
+
+def detect_laser_point():
+    # Initialize the webcam
+    cap = cv2.VideoCapture(0)
+
+    while True:
+        # Read a frame from the webcam
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        # Convert the frame from BGR to HSV color space
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+        # Define the HSV range for red color (laser pointer color)
+        lower_red = np.array([0, 120, 70])    # Lower bound of red
+        upper_red = np.array([10, 255, 255])  # Upper bound of red
+        mask = cv2.inRange(hsv, lower_red, upper_red)
+
+        # Find contours in the mask (detect the red areas)
+        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        for contour in contours:
+            # Get the minimum enclosing circle to identify the laser point
+            (x, y), radius = cv2.minEnclosingCircle(contour)
+            if radius > 1:  # Ignore small noise
+                # Draw a circle around the laser point
+                cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 0), 2)
+
+        # Display the frame with the detected laser point
+        cv2.imshow("Laser Detection", frame)
+
+        # Press "q" to exit the loop
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # Release the camera and close all windows
+    cap.release()
+    cv2.destroyAllWindows()
+
+# Run the laser detection function
+detect_laser_point()
